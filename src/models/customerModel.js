@@ -1,10 +1,13 @@
 import joi from "joi";
+import DateExtension from '@joi/date';
+
+const Joi = joi.extend(DateExtension);
 
 const customerModel = joi.object({
     name: joi.string().required().min(1),
     phone: joi.string().length(11 || 10).pattern(/^[0-9]+$/).required(),
     cpf: joi.string().max(11),
-    birthday: joi.string().date().required()
+    birthday: Joi.date().format("DD-MM-YYYY").raw()
 });
 
 export default customerModel;

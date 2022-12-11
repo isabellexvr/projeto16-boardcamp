@@ -1,4 +1,3 @@
-import { func } from "joi";
 import { connectionDB } from "../database/db.js";
 
 export async function getCostumers(req, res) {
@@ -50,7 +49,7 @@ export async function postCustomer(req, res) {
   }
 }
 
-export async function attCustomer(res, res) {
+export async function attCustomer(req, res) {
   const { name, phone, cpf, birthday } = req.body;
   const { id } = req.params;
   try {
