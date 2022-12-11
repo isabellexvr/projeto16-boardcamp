@@ -1,6 +1,6 @@
 import { connectionDB } from "../database/db.js";
 
-export async function getCostumers(req, res) {
+export async function getCustomers(req, res) {
   const { cpf } = req.query;
   try {
     if (cpf) {
@@ -18,11 +18,12 @@ export async function getCostumers(req, res) {
   }
 }
 
-export async function getCostumerById(req, res) {
+export async function getCustomerById(req, res) {
   const { id } = req.params;
+  console.log(id)
   try {
     const { rows } = await connectionDB.query(
-      "SELECT * FROM costumers WHERE id=$1;",
+      "SELECT * FROM customers WHERE id=$1;",
       [id]
     );
     if (rows.length < 1) {
@@ -54,7 +55,7 @@ export async function attCustomer(req, res) {
   const { id } = req.params;
   try {
     await connectionDB.query(
-      "UPDATE costumers SET name=$1, phone=$2, cpf=$3, birthday=$4 WHERE id=$5;",
+      "UPDATE customers SET name=$1, phone=$2, cpf=$3, birthday=$4 WHERE id=$5;",
       [name, phone, cpf, birthday, id]
     );
     res.sendStatus(200);

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
-  getCostumers,
-  getCostumerById,
+  getCustomers,
+  getCustomerById,
   postCustomer,
   attCustomer,
 } from "../controllers/customersControllers.js";
@@ -9,9 +9,9 @@ import customerValidation from "../middlewares/customerValidationMiddleware.js";
 
 const customersRouter = Router();
 
-customersRouter.get("/customers", getCostumers);
+customersRouter.get("/customers", getCustomers);
 
-customersRouter.get("/customers/:id", getCostumerById);
+customersRouter.get("/customers/:id", getCustomerById);
 
 customersRouter.use(customerValidation);
 

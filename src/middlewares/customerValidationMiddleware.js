@@ -9,8 +9,7 @@ export default async function customerValidation (req, res, next) {
   }
   try {
     const { cpf } = req.body;
-    const cpfExists = await connectionDB.query("SELECT * FROM customers WHERE cpf=$1", [cpf]);
-    console.log(cpfExists.rows)
+    const cpfExists = await connectionDB.query("SELECT * FROM customers WHERE cpf=$1;", [cpf]);
     if(cpfExists.rows.length >0){
         return res.status(409).send("Esse CPF já está cadastrado.");
     }
