@@ -1,13 +1,5 @@
 import { connectionDB } from "../database/db.js";
 
-/* {
-    id: 1,
-    name: 'João Alfredo',
-    phone: '21998899222',
-    cpf: '01234567890',
-    birthday: '1992-10-05'
-  } */
-
 export async function getCostumers(req, res) {
   const { cpf } = req.query;
   try {
@@ -44,5 +36,20 @@ export async function getCostumerById(req, res) {
 }
 
 export async function postCustomer(req, res) {
-    
+    const {name, phone, cpf, birthday} = req.body;
+  try {
+    await connectionDB.query("INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4)", [name, phone, cpf, birthday]);
+    res.status(201).send("Cliente criado com sucesso!")
+  } catch (err) {
+    res.status(500).send(err.message);
+    console.log(err.message);
+  }
 }
+
+/* {
+    id: 1,
+    name: 'João Alfredo',
+    phone: '21998899222',
+    cpf: '01234567890',
+    birthday: '1992-10-05'
+  } */
