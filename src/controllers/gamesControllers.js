@@ -14,8 +14,8 @@ export async function getGames(req, res) {
   const { name } = req.query;
   if (name) {
     const { rows } = await connectionDB.query(
-      "SELECT * FROM games WHERE name LIKE '$1%'",
-      [name]
+      "SELECT * FROM games WHERE name LIKE $1",
+      [name+"%"]
     );
     return res.status(200).send(rows);
   }
