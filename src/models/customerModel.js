@@ -7,7 +7,7 @@ const customerModel = joi.object({
     name: joi.string().required().min(1),
     phone: joi.string().length(11 || 10).pattern(/^[0-9]+$/).required(),
     cpf: joi.string().max(11),
-    birthday: Joi.date().format("DD-MM-YYYY").raw()
+    birthday: Joi.date().format("YYYY-MM-DD").raw()
 });
 
 export default customerModel;
