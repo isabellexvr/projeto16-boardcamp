@@ -9,5 +9,3 @@ const postGameModel = joi.object({
 })
 
 export default postGameModel;
-
-//stocktotal e priceperday > 0
