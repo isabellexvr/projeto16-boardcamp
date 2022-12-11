@@ -1,11 +1,12 @@
-import { connectionDB } from "../database/db";
-import joi from "joi";
-import postGameModel from "../models/postGameModel";
+import { connectionDB } from "../database/db.js";
+import postGameModel from "../models/postGameModel.js";
 
 export default async function postGameValidation(req, res, next) {
+  const {name} = req.body
   const {error} = postGameModel.validate(req.body);
   if(error){
-
+    const errors = error.details.map((detail) => detail.message)
+    return res.send(errors);
   }
   const nameExists = await connectionDB.query(
     "SELECT * FROM games WHERE name=$1;",
