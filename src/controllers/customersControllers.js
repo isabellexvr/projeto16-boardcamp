@@ -58,6 +58,7 @@ export async function attCustomer(res, res) {
       "UPDATE costumers SET name=$1, phone=$2, cpf=$3, birthday=$4 WHERE id=$5;",
       [name, phone, cpf, birthday, id]
     );
+    res.sendStatus(200);
   } catch (err) {
     res.status(500).send(err.message);
     console.log(err.message);
