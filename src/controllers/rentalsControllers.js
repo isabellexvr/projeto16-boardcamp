@@ -25,25 +25,53 @@ function makeFinalObj(rows) {
   return finalObj;
 }
 
+const compareDates = (d1, d2) => {
+  let date1 = new Date(d1).getTime();
+  let date2 = new Date(d2).getTime();
+
+  if (date1 < date2) {
+    console.log(`${d1} is less than ${d2}`);
+  } else if (date1 >= date2) {
+    console.log(`${d1} is greater or equal than ${d2}`);
+    return date1 / (1000 * 60 * 60 * 24) - date2 / (1000 * 60 * 60 * 24);
+  } else {
+    console.log(`Both dates are equal`);
+  }
+};
+
 export async function getRentals(req, res) {
   const { customerId, gameId } = req.query;
   try {
     if (customerId) {
       const { rows } = await connectionDB.query(
-        `SELECT rentals.*,"rentDate"::text, games.name AS "gameName", games."categoryId", customers.name AS "customerName", categories.name AS "categoryName" FROM rentals JOIN games ON rentals."gameId"=games.id JOIN customers ON rentals."customerId"=customers.id JOIN categories ON games."categoryId"=categories.id WHERE rentals."customerId"=$1;`,
+        `SELECT rentals.*,"rentDate"::text,"returnDate"::text, games.name AS "gameName", games."categoryId", customers.name AS "customerName", categories.name AS "categoryName" FROM rentals JOIN games ON rentals."gameId"=games.id JOIN customers ON rentals."customerId"=customers.id JOIN categories ON games."categoryId"=categories.id WHERE rentals."customerId"=$1
+        ORDER BY id
+        ;`,
         [customerId]
       );
       return res.status(200).send(makeFinalObj(rows));
     }
     if (gameId) {
       const { rows } = await connectionDB.query(
-        `SELECT rentals.*,"rentDate"::text, games.name AS "gameName", games."categoryId", customers.name AS "customerName", categories.name AS "categoryName" FROM rentals JOIN games ON rentals."gameId"=games.id JOIN customers ON rentals."customerId"=customers.id JOIN categories ON games."categoryId"=categories.id WHERE rentals."gameId"=$1;`,
+        `SELECT rentals.*,"rentDate"::text,"returnDate"::text, games.name AS "gameName", games."categoryId", customers.name AS "customerName", categories.name AS "categoryName" FROM rentals JOIN games ON rentals."gameId"=games.id JOIN customers ON rentals."customerId"=customers.id JOIN categories ON games."categoryId"=categories.id WHERE rentals."gameId"=$1
+        ORDER BY id
+        ;`,
         [gameId]
       );
       return res.status(200).send(makeFinalObj(rows));
     }
     const { rows } = await connectionDB.query(
-      `SELECT rentals.*,"rentDate"::text, games.name AS "gameName", games."categoryId", customers.name AS "customerName", categories.name AS "categoryName" FROM rentals JOIN games ON rentals."gameId"=games.id JOIN customers ON rentals."customerId"=customers.id JOIN categories ON games."categoryId"=categories.id;`
+      `SELECT 
+        rentals.*,"rentDate"::text,"returnDate"::text,
+        games.name AS "gameName", games."categoryId",
+        customers.name AS "customerName",
+        categories.name AS "categoryName" 
+      FROM rentals
+      JOIN games ON rentals."gameId"=games.id 
+      JOIN customers ON rentals."customerId"=customers.id 
+      JOIN categories ON games."categoryId"=categories.id
+      ORDER BY id
+      ;`
     );
 
     res.send(makeFinalObj(rows));
@@ -72,7 +100,7 @@ export async function postRental(req, res) {
     const finalRent = {
       customerId: rent.customerId,
       gameId: rent.gameId,
-      rentDate: `${dayjs().year()}-${dayjs().month() + 1}-${dayjs().day()}`,
+      rentDate: `${dayjs().year()}-${dayjs().month() + 1}-${dayjs().date()}`,
       daysRented: rent.daysRented,
       returnDate: null,
       originalPrice: rent.daysRented * game.rows[0].pricePerDay,
@@ -113,13 +141,17 @@ export async function endRental(req, res) {
       return res.status(400).send("Esse aluguel já foi finalizado.");
     }
     const presentDate = `${dayjs().year()}-${dayjs().month() + 1}-${
-      dayjs().day().toString().length <= 1 ? "0" + dayjs().day() : dayjs().day()
+      dayjs().date().toString().length <= 1
+        ? "0" + dayjs().date()
+        : dayjs().date()
     }`;
-    //const delayFee =
-    //const rentals = await connectionDB.query("UPDATE rentals SET returnDate=$1, delayFee=$2 WHERE id=$3",[id])
-    console.log(presentDate);
-    console.log(rows[0].rentDate);
-    res.send(rows);
+    const delayFee =
+      compareDates(presentDate, rows[0].rentDate) * rows[0].originalPrice;
+    await connectionDB.query(
+      `UPDATE rentals SET "returnDate"=$1, "delayFee"=$2 WHERE id=$3`,
+      [presentDate, delayFee, id]
+    );
+    res.status(200).send("Aluguel finalizado com sucesso.");
   } catch (err) {
     res.status(500).send(err.message);
     console.log(err.message);
