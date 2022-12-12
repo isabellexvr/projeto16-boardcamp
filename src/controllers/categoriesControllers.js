@@ -1,15 +1,7 @@
 import { connectionDB } from "../database/db.js";
 
-/* 
-FORMATO DE UMA CATEGORIA DA TABELA categories
-{
-    id: 1,
-    name: 'Estratégia',
-  } */
-
 export async function getCategories(req, res) {
   try {
-    //já trás a propriedade rows desestruturada xd
     const { rows } = await connectionDB.query("SELECT * FROM categories;");
     res.status(200).send(rows)
   } catch (err) {

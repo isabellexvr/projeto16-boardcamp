@@ -25,12 +25,12 @@ export async function getCustomerById(req, res) {
   try {
     const { rows } = await connectionDB.query(
       "SELECT * FROM customers WHERE id=$1;",
-      [id]
+      [Number(id)]
     );
     if (rows.length < 1) {
       return res.status(404).send("Esse cliente não existe.");
     }
-    res.status(200).send(rows);
+    res.status(200).send(rows[0]);
   } catch (err) {
     res.status(500).send(err.message);
     console.log(err.message);
@@ -66,11 +66,3 @@ export async function attCustomer(req, res) {
     console.log(err.message);
   }
 }
-
-/* {
-    id: 1,
-    name: 'João Alfredo',
-    phone: '21998899222',
-    cpf: '01234567890',
-    birthday: '1992-10-05'
-  } */
