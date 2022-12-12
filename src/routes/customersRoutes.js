@@ -6,6 +6,7 @@ import {
   attCustomer,
 } from "../controllers/customersControllers.js";
 import customerValidation from "../middlewares/customerValidationMiddleware.js";
+import attCustomerValidation from "../middlewares/attCustomerValidationMiddleware.js";
 
 const customersRouter = Router();
 
@@ -13,10 +14,9 @@ customersRouter.get("/customers", getCustomers);
 
 customersRouter.get("/customers/:id", getCustomerById);
 
-customersRouter.use(customerValidation);
 
-customersRouter.post("/customers", postCustomer);
+customersRouter.post("/customers",customerValidation, postCustomer);
 
-customersRouter.put("/customers/:id", attCustomer);
+customersRouter.put("/customers/:id", attCustomerValidation, attCustomer);
 
 export default customersRouter;

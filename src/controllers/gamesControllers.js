@@ -1,15 +1,5 @@
 import { connectionDB } from "../database/db.js";
 
-/* formato de um jogo:
-{
-    id: 1,
-    name: 'Banco Imobiliário',
-    image: 'http://',
-    stockTotal: 3,
-    categoryId: 1,
-    pricePerDay: 1500,
-  } */
-
 export async function getGames(req, res) {
   const { name } = req.query;
 
@@ -17,7 +7,7 @@ export async function getGames(req, res) {
     if (name) {
       const { rows } = await connectionDB.query(
         "SELECT * FROM games WHERE name LIKE $1;",
-        ["%"+name+"%"]
+        ["%" + name + "%"]
       );
       return res.status(200).send(rows);
     }

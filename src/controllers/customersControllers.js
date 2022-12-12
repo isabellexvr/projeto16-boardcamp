@@ -41,6 +41,10 @@ export async function postCustomer(req, res) {
   const { name, phone, cpf, birthday } = req.body;
   console.log(birthday);
   try {
+    const cpfExists = await connectionDB.query("SELECT * FROM customers WHERE cpf=$1;", [cpf]);
+    if(cpfExists.rows.length >0){
+        return res.status(409).send("Esse CPF já está cadastrado.");
+    }
     await connectionDB.query(
       "INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4));",
       [name, phone, cpf, birthday]
@@ -54,6 +58,7 @@ export async function postCustomer(req, res) {
 
 export async function attCustomer(req, res) {
   const { name, phone, cpf, birthday } = req.body;
+
   const { id } = req.params;
   try {
     await connectionDB.query(
