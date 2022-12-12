@@ -79,7 +79,7 @@ export async function getRentals(req, res) {
     res.status(500).send(err.message);
     console.log(err.message);
   }
-}
+};
 
 export async function postRental(req, res) {
   const rent = req.body;
@@ -125,7 +125,7 @@ export async function postRental(req, res) {
     res.status(500).send(err.message);
     console.log(err.message);
   }
-}
+};
 
 export async function endRental(req, res) {
   const { id } = req.params;
@@ -150,11 +150,10 @@ export async function endRental(req, res) {
     res.status(500).send(err.message);
     console.log(err.message);
   }
-}
+};
 
 export async function deleteRental(req, res) {
   const { id } = req.params;
-  console.log(id)
   const rows = res.locals.rows;
   if (rows[0].returnDate === null) {
     return res.status(400).send("Esse aluguel ainda não foi finalizado.");
@@ -166,6 +165,4 @@ export async function deleteRental(req, res) {
     res.status(500).send(err.message);
     console.log(err.message);
   }
-}
-//returnDate = data atual
-//delayFee = dias de atraso * preço por dia do jogo
+};
