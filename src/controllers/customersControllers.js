@@ -5,12 +5,14 @@ export async function getCustomers(req, res) {
   try {
     if (cpf) {
       const { rows } = await connectionDB.query(
-        "SELECT * FROM customers WHERE cpf LIKE $1;",
+        "SELECT *,birthday::text FROM customers WHERE cpf LIKE $1;",
         [cpf + "%"]
       );
       return res.status(200).send(rows);
     }
-    const { rows } = await connectionDB.query("SELECT * FROM customers;");
+    const { rows } = await connectionDB.query(
+      `SELECT *,birthday::text FROM customers ORDER BY id;`
+    );
     res.status(200).send(rows);
   } catch (err) {
     res.status(500).send(err.message);
@@ -20,7 +22,6 @@ export async function getCustomers(req, res) {
 
 export async function getCustomerById(req, res) {
   const { id } = req.params;
-  console.log(id)
   try {
     const { rows } = await connectionDB.query(
       "SELECT * FROM customers WHERE id=$1;",
@@ -38,9 +39,10 @@ export async function getCustomerById(req, res) {
 
 export async function postCustomer(req, res) {
   const { name, phone, cpf, birthday } = req.body;
+  console.log(birthday);
   try {
     await connectionDB.query(
-      "INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4);",
+      "INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4));",
       [name, phone, cpf, birthday]
     );
     res.status(201).send("Cliente criado com sucesso!");

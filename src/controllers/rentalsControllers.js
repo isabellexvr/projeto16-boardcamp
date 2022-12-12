@@ -1,4 +1,5 @@
 import { connectionDB } from "../database/db.js";
+import dayjs from "dayjs";
 /* 
 {
     id: 1,
@@ -12,14 +13,51 @@ import { connectionDB } from "../database/db.js";
   } */
 
 export async function getRentals(req, res) {
-    const {customerId} = req.query;
-    try{
-        if(customerId){
-            const { rows } = await connectionDB.query("SELECT rentals.*, customer.id, customer.name, game.id, game.name FROM rentals")
-            res.send(rows)
-        }
-        
-    }catch (err) {
+  const { customerId } = req.query;
+  try {
+    if (customerId) {
+      const { rows } = await connectionDB.query(
+        "SELECT rentals.*, customer.id, customer.name, game.id, game.name FROM rentals"
+      );
+      res.send(rows);
+    }
+  } catch (err) {
+    res.status(500).send(err.message);
+    console.log(err.message);
+  }
+}
+
+export async function postRental(req, res) {
+  const rent = req.body;
+  try {
+    const game = await connectionDB.query(
+      `SELECT "pricePerDay" FROM games WHERE id=$1`,
+      [rent.gameId]
+    );
+    const finalRent = {
+      customerId: rent.customerId,
+      gameId: rent.gameId,
+      rendDate: `${dayjs().year()}-${dayjs().month() + 1}-${dayjs().day()}`,
+      daysRented: rent.daysRented,
+      returnDate: null,
+      originalPrice: (rent.daysRented * game.rows[0].pricePerDay),
+      delayFee: null,
+    };
+      await connectionDB.query(
+      `INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee") VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        finalRent.customerId,
+        finalRent.gameId,
+        finalRent.rendDate,
+        finalRent.daysRented,
+        finalRent.returnDate,
+        finalRent.originalPrice,
+        finalRent.delayFee,
+      ]
+    );  
+
+    res.status(201).send(finalRent);
+  } catch (err) {
     res.status(500).send(err.message);
     console.log(err.message);
   }
