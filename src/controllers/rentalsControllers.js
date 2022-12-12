@@ -1,26 +1,52 @@
 import { connectionDB } from "../database/db.js";
 import dayjs from "dayjs";
-/* 
-{
-    id: 1,
-    customerId: 1,
-    gameId: 1,
-    rentDate: '2021-06-20',    // data em que o aluguel foi feito
-    daysRented: 3,             // por quantos dias o cliente agendou o aluguel
-    returnDate: null,          // data que o cliente devolveu o jogo (null enquanto não devolvido)
-    originalPrice: 4500,       // preço total do aluguel em centavos (dias alugados vezes o preço por dia do jogo)
-    delayFee: null             // multa total paga por atraso (dias que passaram do prazo vezes o preço por dia do jogo)
-  } */
+
+function makeFinalObj(rows) {
+  const finalObj = rows.map((r) => ({
+    id: r.id,
+    customerId: r.customerId,
+    gameId: r.gameId,
+    rentDate: r.rentDate,
+    daysRented: r.daysRented,
+    returnDate: r.returnDate,
+    originalPrice: r.originalPrice,
+    delayFee: r.delayFee,
+    customer: {
+      id: r.customerId,
+      name: r.customerName,
+    },
+    game: {
+      id: r.gameId,
+      name: r.gameName,
+      categoryId: r.categoryId,
+      categoryName: r.categoryName,
+    },
+  }));
+  return finalObj;
+}
 
 export async function getRentals(req, res) {
-  const { customerId } = req.query;
+  const { customerId, gameId } = req.query;
   try {
     if (customerId) {
       const { rows } = await connectionDB.query(
-        "SELECT rentals.*, customer.id, customer.name, game.id, game.name FROM rentals"
+        `SELECT rentals.*,"rentDate"::text, games.name AS "gameName", games."categoryId", customers.name AS "customerName", categories.name AS "categoryName" FROM rentals JOIN games ON rentals."gameId"=games.id JOIN customers ON rentals."customerId"=customers.id JOIN categories ON games."categoryId"=categories.id WHERE rentals."customerId"=$1;`,
+        [customerId]
       );
-      res.send(rows);
+      return res.status(200).send(makeFinalObj(rows));
     }
+    if (gameId) {
+      const { rows } = await connectionDB.query(
+        `SELECT rentals.*,"rentDate"::text, games.name AS "gameName", games."categoryId", customers.name AS "customerName", categories.name AS "categoryName" FROM rentals JOIN games ON rentals."gameId"=games.id JOIN customers ON rentals."customerId"=customers.id JOIN categories ON games."categoryId"=categories.id WHERE rentals."gameId"=$1;`,
+        [gameId]
+      );
+      return res.status(200).send(makeFinalObj(rows));
+    }
+    const { rows } = await connectionDB.query(
+      `SELECT rentals.*,"rentDate"::text, games.name AS "gameName", games."categoryId", customers.name AS "customerName", categories.name AS "categoryName" FROM rentals JOIN games ON rentals."gameId"=games.id JOIN customers ON rentals."customerId"=customers.id JOIN categories ON games."categoryId"=categories.id;`
+    );
+
+    res.send(makeFinalObj(rows));
   } catch (err) {
     res.status(500).send(err.message);
     console.log(err.message);
@@ -46,7 +72,7 @@ export async function postRental(req, res) {
     const finalRent = {
       customerId: rent.customerId,
       gameId: rent.gameId,
-      rendDate: `${dayjs().year()}-${dayjs().month() + 1}-${dayjs().day()}`,
+      rentDate: `${dayjs().year()}-${dayjs().month() + 1}-${dayjs().day()}`,
       daysRented: rent.daysRented,
       returnDate: null,
       originalPrice: rent.daysRented * game.rows[0].pricePerDay,
@@ -58,7 +84,7 @@ export async function postRental(req, res) {
       [
         finalRent.customerId,
         finalRent.gameId,
-        finalRent.rendDate,
+        finalRent.rentDate,
         finalRent.daysRented,
         finalRent.returnDate,
         finalRent.originalPrice,
@@ -73,25 +99,31 @@ export async function postRental(req, res) {
   }
 }
 
-/* [
-    {
-      id: 1,
-      customerId: 1,
-      gameId: 1,
-      rentDate: '2021-06-20',
-      daysRented: 3,
-      returnDate: null, // troca pra uma data quando já devolvido
-      originalPrice: 4500,
-      delayFee: null,
-      customer: {
-       id: 1,
-       name: 'João Alfredo'
-      },
-      game: {
-        id: 1,
-        name: 'Banco Imobiliário',
-        categoryId: 1,
-        categoryName: 'Estratégia'
-      }
+export async function endRental(req, res) {
+  const { id } = req.params;
+  try {
+    const { rows } = await connectionDB.query(
+      `SELECT *,"rentDate"::text FROM rentals WHERE id=$1`,
+      [id]
+    );
+    if (rows.length < 1) {
+      return res.status(404).send("Esse aluguel não existe.");
     }
-  ] */
+    if (rows[0].returnDate !== null) {
+      return res.status(400).send("Esse aluguel já foi finalizado.");
+    }
+    const presentDate = `${dayjs().year()}-${dayjs().month() + 1}-${
+      dayjs().day().toString().length <= 1 ? "0" + dayjs().day() : dayjs().day()
+    }`;
+    //const delayFee =
+    //const rentals = await connectionDB.query("UPDATE rentals SET returnDate=$1, delayFee=$2 WHERE id=$3",[id])
+    console.log(presentDate);
+    console.log(rows[0].rentDate);
+    res.send(rows);
+  } catch (err) {
+    res.status(500).send(err.message);
+    console.log(err.message);
+  }
+}
+//returnDate = data atual
+//delayFee = dias de atraso * preço por dia do jogo
