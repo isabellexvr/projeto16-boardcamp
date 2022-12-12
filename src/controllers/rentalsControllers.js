@@ -31,19 +31,29 @@ export async function postRental(req, res) {
   const rent = req.body;
   try {
     const game = await connectionDB.query(
-      `SELECT "pricePerDay" FROM games WHERE id=$1`,
+      `SELECT "pricePerDay", "stockTotal" FROM games WHERE id=$1`,
       [rent.gameId]
     );
+    const rentals = await connectionDB.query(
+      `SELECT * FROM rentals WHERE "gameId"=$1`,
+      [rent.gameId]
+    );
+    if (rentals.rows.length >= game.rows[0].stockTotal) {
+      return res
+        .status(400)
+        .send("Não há jogos disponíveis para aluguel no momento.");
+    }
     const finalRent = {
       customerId: rent.customerId,
       gameId: rent.gameId,
       rendDate: `${dayjs().year()}-${dayjs().month() + 1}-${dayjs().day()}`,
       daysRented: rent.daysRented,
       returnDate: null,
-      originalPrice: (rent.daysRented * game.rows[0].pricePerDay),
+      originalPrice: rent.daysRented * game.rows[0].pricePerDay,
       delayFee: null,
     };
-      await connectionDB.query(
+
+    await connectionDB.query(
       `INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee") VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         finalRent.customerId,
@@ -54,9 +64,9 @@ export async function postRental(req, res) {
         finalRent.originalPrice,
         finalRent.delayFee,
       ]
-    );  
+    );
 
-    res.status(201).send(finalRent);
+    res.status(201).send("Aluguel criado com sucesso.");
   } catch (err) {
     res.status(500).send(err.message);
     console.log(err.message);
