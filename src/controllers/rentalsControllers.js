@@ -139,11 +139,12 @@ export async function endRental(req, res) {
         ? "0" + dayjs().date()
         : dayjs().date()
     }`;
+    console.log("vindo do front: ", rows[0].rentDate)
     const delayFee =
       compareDates(presentDate, rows[0].rentDate) * rows[0].originalPrice;
     await connectionDB.query(
       `UPDATE rentals SET "returnDate"=$1, "delayFee"=$2 WHERE id=$3`,
-      [presentDate, delayFee, id]
+      [presentDate, delayFee.toFixed(0), Number(id)]
     );
     res.status(200).send("Aluguel finalizado com sucesso.");
   } catch (err) {
