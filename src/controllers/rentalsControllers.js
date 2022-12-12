@@ -130,13 +130,7 @@ export async function postRental(req, res) {
 export async function endRental(req, res) {
   const { id } = req.params;
   try {
-    const { rows } = await connectionDB.query(
-      `SELECT *,"rentDate"::text FROM rentals WHERE id=$1`,
-      [id]
-    );
-    if (rows.length < 1) {
-      return res.status(404).send("Esse aluguel não existe.");
-    }
+    const rows = res.locals.rows;
     if (rows[0].returnDate !== null) {
       return res.status(400).send("Esse aluguel já foi finalizado.");
     }
@@ -152,6 +146,22 @@ export async function endRental(req, res) {
       [presentDate, delayFee, id]
     );
     res.status(200).send("Aluguel finalizado com sucesso.");
+  } catch (err) {
+    res.status(500).send(err.message);
+    console.log(err.message);
+  }
+}
+
+export async function deleteRental(req, res) {
+  const { id } = req.params;
+  console.log(id)
+  const rows = res.locals.rows;
+  if (rows[0].returnDate === null) {
+    return res.status(400).send("Esse aluguel ainda não foi finalizado.");
+  }
+  try {
+    await connectionDB.query("DELETE FROM rentals WHERE rentals.id=$1",[id]);
+    res.status(200).send("Aluguel excluído com sucesso.")
   } catch (err) {
     res.status(500).send(err.message);
     console.log(err.message);
